@@ -2,14 +2,17 @@ public with sharing class GetSessionIdForAura {
 
     public static String getUserSessionId(){
         String sessionId = '';
-        PageReference reportPage = Page.GetSessionId;
-        String GetSessionIdFromPage = reportPage.getContent().toString();
+        String AesKey = EncodingUtil.base64Encode(Crypto.generateAesKey(256));
 
-        Integer startPosition = GetSessionIdFromPage.indexOf('Start_Of_Session_Id') + 'Start_Of_Session_Id'.length();
-        Integer endPosition = GetSessionIdFromPage.indexOf('End_Of_Session_Id');
+        PageReference GetSessionIdPage = Page.GetSessionId;
+        GetSessionIdPage.getParameters().put('aeskey', AesKey);
+        String PageContent = GetSessionIdPage.getContent().toString();
 
-        sessionId = GetSessionIdFromPage.substring(startPosition, endPosition);
+        Integer startPosition = PageContent.indexOf('SID_START') + 'SID_START'.length();
+        Integer endPosition = PageContent.indexOf('SID_END');
 
-        return sessionId;
+        sessionId = PageContent.substring(startPosition, endPosition);
+
+        return CryptoHelper.decodeString(AesKey, sessionId);
     }
 }
